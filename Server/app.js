@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const { Sequelize } = require("sequelize");
+// const { Sequelize } = require("sequelize");
 
 const attendanceRoute = require("./Routes/attendanceRoute.js");
 
@@ -18,7 +18,7 @@ app.use(cors());
 
 app.use(bodyParser.json({ extended: false }));
 
-app.use("/attendance", attendanceRoute);
+app.use("/", attendanceRoute);
 
 AttendanceModel.belongsTo(StudentModel);
 AttendanceModel.belongsTo(DateModel);

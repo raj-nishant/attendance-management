@@ -1,139 +1,120 @@
-const date = document.getElementById("date");
-const searchBtn = document.getElementById("searchBtn");
-const fetchBtn = document.getElementById("fetchBtn");
-// const attendanceContainer = document.getElementById('attendanceContainer');
-const attendanceContainer_name = document.getElementById(
-  "attendanceContainer_name"
-);
-const attendanceContainer_status = document.getElementById(
-  "attendanceContainer_status"
-);
-const attendanceContainer_percent = document.getElementById(
-  "attendanceContainer_percent"
-);
-const markBtnContainer = document.getElementById("markBtnContainer");
+const dateInput = document.getElementById("date");
+const searchButton = document.getElementById("searchBtn");
+const fetchButton = document.getElementById("fetchBtn");
+const nameContainer = document.getElementById("nameContainer");
+const statusContainer = document.getElementById("statusContainer");
+const percentContainer = document.getElementById("percentContainer");
+const markButtonContainer = document.getElementById("markBtnContainer");
 
-//------------------------------------------------------------------------------------
-searchBtn.addEventListener("click", getAttendance);
+searchButton.addEventListener("click", fetchAttendance);
+fetchButton.addEventListener("click", fetchAttendanceReport);
 
-fetchBtn.addEventListener("click", getAttanceReport);
-//------------------------------------------------------------------------------------
-
-function getAttendance(e) {
-  if (date.value === "") {
-    return alert("please enter the date");
+function fetchAttendance(event) {
+  if (dateInput.value === "") {
+    return alert("Please enter the date.");
   }
   axios
-    .get("http://localhost:9000/attendance/", { params: { date: date.value } })
-    .then((result) => {
-      console.log(result);
-      if (result.data.attendanceAvailable) {
-        renderAttendanceSummary(result.data);
+    .get("http://localhost:9000/", { params: { date: dateInput.value } })
+    .then((response) => {
+      console.log(response);
+      if (response.data.attendanceAvailable) {
+        displayAttendanceSummary(response.data);
       } else {
-        renderAttendanceForm(result.data);
+        displayAttendanceForm(response.data);
       }
     })
-    .catch((err) => console.error(err));
+    .catch((error) => console.error(error));
 }
 
 function postAttendance() {
   let jsonData = {
-    date: date.value,
+    date: dateInput.value,
     data: [],
   };
 
-  const radio = document.getElementsByClassName("stud-radio");
-  for (let i = 0; i < radio.length; i++) {
-    if (radio[i].checked) {
+  const radioButtons = document.getElementsByClassName("stud-radio");
+  for (let i = 0; i < radioButtons.length; i++) {
+    if (radioButtons[i].checked) {
       jsonData.data.push({
-        studentId: radio[i].name.split("_")[0],
-        studentName: radio[i].name.split("_")[1],
-        status: radio[i].value,
+        studentId: radioButtons[i].name.split("_")[0],
+        studentName: radioButtons[i].name.split("_")[1],
+        status: radioButtons[i].value,
       });
-      // console.log(radio[i].name, radio[i].value);
     }
 
     let selectedValue = null;
-    document.getElementsByName(`${radio[i].name}`).forEach((r) => {
-      if (r.checked) {
-        selectedValue = r.value;
+    document.getElementsByName(`${radioButtons[i].name}`).forEach((radio) => {
+      if (radio.checked) {
+        selectedValue = radio.value;
       }
     });
-    if (selectedValue === null) return alert("please mark all the attendance");
+    if (selectedValue === null) return alert("Please mark all the attendance.");
   }
 
   console.log(jsonData);
   axios
-    .post("http://localhost:9000/attendance/", jsonData)
+    .post("http://localhost:9000/", jsonData)
     .then(() => {
-      renderAttendanceSummary(jsonData);
+      displayAttendanceSummary(jsonData);
     })
-    .catch((err) => console.error("postAttendanceError: ", err));
+    .catch((error) => console.error("postAttendanceError: ", error));
 }
 
-//======================================================================================================================================
+function displayAttendanceForm(data) {
+  clearContainers();
+  const totalDays = data.totalDays;
 
-function renderAttendanceForm(result) {
-  attendanceContainer_name.innerHTML = "";
-  attendanceContainer_status.innerHTML = "";
-  attendanceContainer_percent.innerHTML = "";
-  markBtnContainer.innerHTML = "";
-
-  const totalDays = result.totalDays;
-
-  for (let i = 0; i < result.data.length; i++) {
-    attendanceContainer_name.innerHTML += `${result.data[i].studentName} <br><br>`;
-    attendanceContainer_status.innerHTML += `<label><input type="radio" name="${result.data[i].studentId}_${result.data[i].studentName}" class="stud-radio" value="Present">Present</label><label><input type="radio" name="${result.data[i].studentId}_${result.data[i].studentName}" class="stud-radio" value="Absent">Absent</label>  <br><br>`;
+  for (let i = 0; i < data.data.length; i++) {
+    nameContainer.innerHTML += `${data.data[i].studentName} <br><br>`;
+    statusContainer.innerHTML += `<label><input type="radio" name="${data.data[i].studentId}_${data.data[i].studentName}" class="stud-radio" value="Present">Present</label><label><input type="radio" name="${data.data[i].studentId}_${data.data[i].studentName}" class="stud-radio" value="Absent">Absent</label>  <br><br>`;
   }
 
-  let submitAttendanceBtn = document.createElement("button");
-  submitAttendanceBtn.className = "submitAttendanceBtn";
-  submitAttendanceBtn.appendChild(document.createTextNode("Mark Attendance"));
-  submitAttendanceBtn.addEventListener("click", postAttendance);
+  let submitAttendanceButton = document.createElement("button");
+  submitAttendanceButton.appendChild(
+    document.createTextNode("Mark Attendance")
+  );
+  submitAttendanceButton.addEventListener("click", postAttendance);
 
-  markBtnContainer.appendChild(submitAttendanceBtn);
+  markButtonContainer.appendChild(submitAttendanceButton);
 }
 
-function renderAttendanceSummary(result) {
-  attendanceContainer_name.innerHTML = "";
-  attendanceContainer_status.innerHTML = "";
-  attendanceContainer_percent.innerHTML = "";
-  markBtnContainer.innerHTML = "";
+function displayAttendanceSummary(data) {
+  clearContainers();
 
-  for (let i = 0; i < result.data.length; i++) {
-    attendanceContainer_name.innerHTML += `${result.data[i].studentName} <br><br>`;
-    if (result.data[i].status === "Present") {
-      attendanceContainer_status.innerHTML += `✔ Present <br><br>`;
+  for (let i = 0; i < data.data.length; i++) {
+    nameContainer.innerHTML += `${data.data[i].studentName} <br><br>`;
+    if (data.data[i].status === "Present") {
+      statusContainer.innerHTML += `✔ Present <br><br>`;
     } else {
-      attendanceContainer_status.innerHTML += `✘ Absent <br><br>`;
+      statusContainer.innerHTML += `✘ Absent <br><br>`;
     }
   }
 }
 
-//=====================================================================================================================
-function getAttanceReport() {
+function fetchAttendanceReport() {
   axios
-    .get("http://localhost:9000/attendance/report")
-    .then((result) => {
-      renderReport(result.data);
+    .get("http://localhost:9000/report")
+    .then((response) => {
+      displayReport(response.data);
     })
-    .catch((err) => console.error(err));
+    .catch((error) => console.error(error));
 }
 
-function renderReport(result) {
-  attendanceContainer_name.innerHTML = "";
-  attendanceContainer_status.innerHTML = "";
-  attendanceContainer_percent.innerHTML = "";
-  markBtnContainer.innerHTML = "";
+function displayReport(data) {
+  clearContainers();
+  const totalDays = data.totalDays;
 
-  const totalDays = result.totalDays;
-
-  for (let i = 0; i < result.data.length; i++) {
-    let percent = Math.round((result.data[i].presentCount / totalDays) * 100);
-    attendanceContainer_name.innerHTML += `${result.data[i].studentName} <br><br>`;
-    attendanceContainer_status.innerHTML += `${result.data[i].presentCount}/${totalDays} <br><br>`;
-    attendanceContainer_percent.innerHTML += `${percent}% <br><br>`;
+  for (let i = 0; i < data.data.length; i++) {
+    let percent = Math.round((data.data[i].presentCount / totalDays) * 100);
+    nameContainer.innerHTML += `${data.data[i].studentName} <br><br>`;
+    statusContainer.innerHTML += `${data.data[i].presentCount}/${totalDays} <br><br>`;
+    percentContainer.innerHTML += `${percent}% <br><br>`;
   }
 }
 
-//=====================================================================================================================
+function clearContainers() {
+  nameContainer.innerHTML = "";
+  statusContainer.innerHTML = "";
+  percentContainer.innerHTML = "";
+  markButtonContainer.innerHTML = "";
+}

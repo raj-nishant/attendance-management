@@ -9,8 +9,6 @@ const sequelize = require("../util/db.js");
 
 module.exports.getAttendance = async (req, res, next) => {
   try {
-    // console.log("Handling GET request for attendance...");
-
     const requestedDate = req.query.date;
 
     const foundDate = await DateModel.findOne({
